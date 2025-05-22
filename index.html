@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Salto de la Rana - 3 Ranas</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 2rem;
+  }
+  #board {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  .cell {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #444;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+  }
+  .frog {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+  }
+  .green {
+    background-color: #4CAF50;
+  }
+  .red {
+    background-color: #E53935;
+  }
+  .empty {
+    background-color: #eee;
+    cursor: default;
+  }
+  #moves {
+    margin-top: 20px;
+    font-weight: bold;
+  }
+  #message {
+    margin-top: 15px;
+    font-size: 1.2rem;
+    color: #2e7d32;
+    font-weight: bold;
+  }
+  button {
+    margin-top: 15px;
+    padding: 10px 15px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>Salto de la Rana - 3 Ranas</h1>
+<div id="board"></div>
+<div id="moves">Movimientos: 0</div>
+<div id="message"></div>
+<button id="restartBtn">Reiniciar Juego</button>
+
+<script>
+  // Estado inicial: 3 verdes, vacío, 3 rojas
+  let board = ['green', 'green', 'green', 'empty', 'red', 'red', 'red'];
+  let moves = 0;
+  const boardDiv = document.getElementById('board');
+  const movesDiv = document.getElementById('moves');
+  const messageDiv = document.getElementById('message');
+  const restartBtn = document.getElementById('restartBtn');
+
+  function drawBoard() {
+    boardDiv.innerHTML = '';
+    board.forEach((cell, i) => {
+      const cellDiv = document.createElement('div');
+      cellDiv.classList.add('cell');
+      cellDiv.dataset.index = i;
+      if (cell === 'empty') {
+        cellDiv.classList.add('empty');
+        cellDiv.textContent = '';
+      } else {
+        const frogDiv = document.createElement('div');
+        frogDiv.classList.add('frog', cell);
+        cellDiv.appendChild(frogDiv);
+      }
+      boardDiv.appendChild(cellDiv);
+    });
+  }
+
+  // Validar movimiento o salto válido
+  // Movimiento simple: una posición adyacente vacía
+  // Salto: dos posiciones, saltando sobre rana opuesta
+  function canMove(from, to) {
+    if (board[to] !== 'empty') return false;
+    const diff = to - from;
+
+    // Movimiento simple a casilla vacía adyacente (±1)
+    if (Math.abs(diff) === 1) {
+      return true;
+    }
+    // Salto sobre rana opuesta (±2)
+    if (Math.abs(diff) === 2) {
+      const middle = from + diff / 2;
+      if (board[middle] !== 'empty' && board[middle] !== board[from]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  let selectedIndex = null;
+
+  boardDiv.addEventListener('click', (e) => {
+    const cellDiv = e.target.closest('.cell');
+    if (!cellDiv) return;
+    const idx = parseInt(cellDiv.dataset.index);
+
+    if (selectedIndex === null) {
+      // Selecciona rana si no vacía
+      if (board[idx] !== 'empty') {
+        selectedIndex = idx;
+        cellDiv.style.borderColor = '#2196F3';
+      }
+    } else {
+      // Intenta mover rana seleccionada a idx
+      if (canMove(selectedIndex, idx)) {
+        board[idx] = board[selectedIndex];
+        board[selectedIndex] = 'empty';
+        moves++;
+        movesDiv.textContent = 'Movimientos: ' + moves;
+        selectedIndex = null;
+        clearBorders();
+        drawBoard();
+        checkWin();
+      } else {
+        alert('Movimiento inválido');
+        selectedIndex = null;
+        clearBorders();
+      }
+    }
+  });
+
+  function clearBorders() {
+    document.querySelectorAll('.cell').forEach(cell => {
+      cell.style.borderColor = '#444';
+    });
+  }
+
+  function checkWin() {
+    const goal = ['red', 'red', 'red', 'empty', 'green', 'green', 'green'];
+    if (board.every((val, idx) => val === goal[idx])) {
+      messageDiv.textContent = `¡Felicidades! Lograste intercambiar las posiciones en ${moves} movimientos.`;
+      boardDiv.style.pointerEvents = 'none'; // bloquear más movimientos
+    }
+  }
+
+  restartBtn.addEventListener('click', () => {
+    board = ['green', 'green', 'green', 'empty', 'red', 'red', 'red'];
+    moves = 0;
+    messageDiv.textContent = '';
+    movesDiv.textContent = 'Movimientos: 0';
+    boardDiv.style.pointerEvents = 'auto';
+    selectedIndex = null;
+    clearBorders();
+    drawBoard();
+  });
+
+  drawBoard();
+</script>
+
+</body>
+</html>
